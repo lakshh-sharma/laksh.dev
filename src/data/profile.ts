@@ -13,8 +13,8 @@ export const profile = {
   calendar: "cal.com/lakshsharma",
   socials: {
     github: "@lakshh-sharma",
-    x: "@laksh_sharma",
-    linkedin: "in/lakshsharma",
+    x: "@laksh__sharma_",
+    linkedin: "in/laksh-sharma-690b6a298",
     site: "laksh.dev",
   },
 

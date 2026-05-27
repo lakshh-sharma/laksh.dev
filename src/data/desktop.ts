@@ -23,8 +23,8 @@ export const FOLDERS: DeskFolder[] = [
         kind: "txt",
         body:
           `${profile.name}\n${profile.role} — ${profile.school}\n\n` +
-          `EXPERIENCE\n  • ${profile.role} — building ${profile.projects[0].name}\n  • Prior: internships at YC companies\n\n` +
-          `SKILLS\n  ${profile.stack.lang.join(", ")}\n  ${profile.stack.infra.join(", ")}\n\n` +
+          `EXPERIENCE\n  • ${profile.experience[0].role} @ ${profile.experience[0].org} (${profile.experience[0].period})\n  • ${profile.experience[1].role} — ${profile.experience[1].org}\n\n` +
+          `SKILLS\n  ${profile.stack.lang.join(", ")}\n  ${profile.stack.backend.join(", ")}\n  ${profile.stack.frontend.join(", ")}\n\n` +
           `LINKS\n  ${profile.socials.github} · ${profile.socials.site}`,
       },
     ],

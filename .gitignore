@@ -16,3 +16,4 @@ vite.config.ts.timestamp-*
 # scratch
 v0-standalone.html.bak
 /icons
+.vercel

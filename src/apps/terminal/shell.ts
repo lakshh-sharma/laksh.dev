@@ -33,10 +33,11 @@ function buildFS(): FSNode {
       "stack.txt": {
         type: "file",
         content:
-          `lang   ${profile.stack.lang.join(", ")}\n` +
-          `infra  ${profile.stack.infra.join(", ")}\n` +
-          `ai     ${profile.stack.ai.join(", ")}\n` +
-          `tools  ${profile.stack.tools.join(", ")}`,
+          `lang      ${profile.stack.lang.join(", ")}\n` +
+          `backend   ${profile.stack.backend.join(", ")}\n` +
+          `frontend  ${profile.stack.frontend.join(", ")}\n` +
+          `ai        ${profile.stack.ai.join(", ")}\n` +
+          `tools     ${profile.stack.tools.join(", ")}`,
       },
       "contact.txt": {
         type: "file",
@@ -183,25 +184,28 @@ export class Shell {
     help: () => ({
       lines: [
         line(s("slash commands:", "dim")),
-        line(s("  /about", "orange"), s("       who i am, the short version")),
-        line(s("  /projects", "orange"), s("    things i've built")),
-        line(s("  /experience", "orange"), s("  where i've worked")),
-        line(s("  /stack", "orange"), s("       what i build with")),
-        line(s("  /contact", "orange"), s("     how to reach me")),
-        line(s("  /resume", "orange"), s("      download link")),
-        line(s("  /socials", "orange"), s("     github · x · linkedin")),
-        line(s("  /clear", "orange"), s("       wipe scrollback")),
-        line(s("  /exit", "orange"), s("        back to plain shell")),
+        line(s("  /about", "orange"), s("         who i am, the short version")),
+        line(s("  /projects", "orange"), s("      things i've built")),
+        line(s("  /experience", "orange"), s("    where i've worked")),
+        line(s("  /publications", "orange"), s("  papers")),
+        line(s("  /awards", "orange"), s("        competitions and recognition")),
+        line(s("  /stack", "orange"), s("         what i build with")),
+        line(s("  /contact", "orange"), s("       how to reach me")),
+        line(s("  /resume", "orange"), s("        download link")),
+        line(s("  /socials", "orange"), s("       github · x · linkedin")),
+        line(s("  /clear", "orange"), s("         wipe scrollback")),
+        line(s("  /exit", "orange"), s("          back to plain shell")),
         line(s("or just type a question — i'll answer.", "dim")),
       ],
     }),
     about: () => ({ lines: [...profile.about.map((l) => [s(l)] as Line)] }),
     stack: () => ({
       lines: [
-        line(s("lang   ", "dim"), s(profile.stack.lang.join(", "))),
-        line(s("infra  ", "dim"), s(profile.stack.infra.join(", "))),
-        line(s("ai     ", "dim"), s(profile.stack.ai.join(", "))),
-        line(s("tools  ", "dim"), s(profile.stack.tools.join(", "))),
+        line(s("lang      ", "dim"), s(profile.stack.lang.join(", "))),
+        line(s("backend   ", "dim"), s(profile.stack.backend.join(", "))),
+        line(s("frontend  ", "dim"), s(profile.stack.frontend.join(", "))),
+        line(s("ai        ", "dim"), s(profile.stack.ai.join(", "))),
+        line(s("tools     ", "dim"), s(profile.stack.tools.join(", "))),
       ],
     }),
     contact: () => ({
@@ -233,14 +237,35 @@ export class Shell {
       out.push(line(s("ask me about any of them, or run /projects <name>.", "dim")));
       return { lines: out };
     },
-    experience: () => ({
-      lines: [
-        line(s("now    ", "dim"), s(profile.role + " — " + profile.projects[0].name, "fg")),
-        line(s("       ", "dim"), s(profile.projects[0].detail, "dim")),
-        line(s("prior  ", "dim"), s("internships @ YC-backed startups (infra · AI tooling)")),
-        line(s("school ", "dim"), s(profile.school)),
-      ],
-    }),
+    experience: () => {
+      const out: Line[] = [];
+      profile.experience.forEach((e, i) => {
+        if (i > 0) out.push([s(" ")]);
+        out.push(line(s(e.role, "fg"), s(" · " + e.org, "orange")));
+        out.push(line(s(e.period, "dim")));
+        out.push(line(s(e.blurb)));
+        out.push(line(s(e.detail, "dim")));
+      });
+      return { lines: out };
+    },
+    publications: () => {
+      const out: Line[] = [];
+      profile.publications.forEach((p) => {
+        out.push(line(s("• "), s(p.title, "fg")));
+        out.push(line(s("  " + p.venue, "blue")));
+        out.push(line(s("  " + p.role, "dim")));
+      });
+      return { lines: out };
+    },
+    awards: () => {
+      const out: Line[] = [];
+      profile.awards.forEach((a) => {
+        const tail = a.note ? line(s(a.year + "  ", "dim"), s(a.title), s("  " + a.note, "dim"))
+                            : line(s(a.year + "  ", "dim"), s(a.title));
+        out.push(tail);
+      });
+      return { lines: out };
+    },
     clear: () => ({ lines: [], clear: true }),
     exit: () => {
       this.laksh = false;
@@ -317,13 +342,58 @@ function common(prefix: string, names: string[]): string | null {
 function answer(q: string): Line[] {
   const t = q.toLowerCase();
   const reply = (lines: string[]): Line[] => lines.map((l) => [s(l)]);
-  if (/(work|building|right now|current|stealth)/.test(t))
+
+  if (/(silicon ?data|gpu|bench|asplos|gpgpu|paper|silicon)/.test(t))
     return reply([
-      "Right now I'm heads-down on stealth-mode — agentic infra for SMB ops.",
-      "TypeScript + Rust + Postgres + Modal, shipping daily (47-day streak).",
-      "Run /projects for the full list.",
+      "At Silicon Data I built SiliconMark — a self-scaling GPU benchmark that ramps",
+      "workloads in geometric steps to find hardware limits with no manual tuning.",
+      "Validated across 1,000+ runs at <2% variance. We co-authored a paper from it:",
+      "'Did You Win the GPU Cloud Lottery?' — accepted at GPGPU 2026 @ ASPLOS.",
+      "Run /publications for the full citation.",
     ]);
-  if (/(project|portfolio|made|built)/.test(t))
+  if (/(otcr|consult|club|president|executive|partner)/.test(t))
+    return reply([
+      "Co-President at OTCR Consulting — UIUC's largest student consulting org.",
+      "60 members, 11 client engagements per semester, 8% accept rate.",
+      "Grew the club's finances from $3k → $20k. Founded the tech division from",
+      "scratch (internal tooling adoption + technical consulting projects).",
+    ]);
+  if (/(iypt|olympiad|physics|india|tournament)/.test(t))
+    return reply([
+      "Captained India's national team at IYPT 2022 — 1 of 5 selected.",
+      "Selected again in 2024. Mentored IYPT India 2024 and IYNT 2026.",
+      "IYPT is a research-based physics olympiad across 30+ countries, built",
+      "around experimental problem-solving and scientific debate.",
+    ]);
+  if (/(work|building|right now|current|now)/.test(t))
+    return reply([
+      `Right now: ${profile.role}.`,
+      "Building benchmarks and tooling on the GPU side; on the personal side,",
+      "shipping inari (social investing) and forge (Mac prompt rewriter).",
+      "Run /projects for the rundown.",
+    ]);
+  if (/(inari|invest|broker|alpaca|tradier|snaptrade)/.test(t))
+    return reply([
+      "Inari is a social investing platform — friends create group funds and",
+      "coordinate trades without pooling capital. Each member's money stays in",
+      "their own broker. React + FastAPI. Native Alpaca + Tradier, with SnapTrade",
+      "for Robinhood, Fidelity, Webull, Schwab, IBKR, E*Trade, Tastytrade.",
+    ]);
+  if (/(forge|prompt|swift|menu ?bar|hotkey)/.test(t))
+    return reply([
+      "Forge is a Mac menu-bar app that rewrites any prompt into a technique-rich",
+      "one on a hotkey — works across any text field via the Accessibility API.",
+      "Swift / SwiftUI. Local rules engine + optional Anthropic API pass.",
+      "github.com/lakshh-sharma/Forge",
+    ]);
+  if (/(crawl|crawler|crAIwl|crawler|scrape|extract)/i.test(t))
+    return reply([
+      "crAIwl is an intelligent crawler — describe what to extract in English and",
+      "it writes and manages the crawler itself. TypeScript, 6-package monorepo.",
+      "Templates are written once and reused across recurring workflows.",
+      "github.com/lakshh-sharma/crAIwl",
+    ]);
+  if (/(project|portfolio|made|built|side)/.test(t))
     return [
       [s("Here's what I'm building:")],
       ...profile.projects.map((p) => line(s("  • "), s(p.name, "dir"), s(" — " + p.blurb, "dim"))),
@@ -332,7 +402,8 @@ function answer(q: string): Line[] {
   if (/(stack|tech|language|tool|framework)/.test(t))
     return reply([
       "Languages: " + profile.stack.lang.join(", "),
-      "Infra: " + profile.stack.infra.join(", "),
+      "Backend: " + profile.stack.backend.join(", "),
+      "Frontend: " + profile.stack.frontend.join(", "),
       "AI: " + profile.stack.ai.join(", "),
       "Run /stack for the full readout.",
     ]);
@@ -344,20 +415,20 @@ function answer(q: string): Line[] {
   if (/(looking|next|want|seeking|opportunit|role|join)/.test(t))
     return reply([
       "I'm drawn to small teams shipping real products with fast feedback loops —",
-      "especially anything where latency, reliability, and good tooling matter.",
+      "especially anything where benchmarks, latency, and good tooling matter.",
       "If that's you: /contact.",
     ]);
-  if (/(experience|work history|intern|job|prior|background)/.test(t))
+  if (/(experience|work history|intern|job|prior|background|hist)/.test(t))
     return reply([
-      `${profile.role} — currently building ${profile.projects[0].name}.`,
-      "Previously: internships at a couple of YC companies.",
+      `${profile.role}. Co-President of OTCR Consulting at UIUC.`,
+      "Previously captained India's national IYPT team in 2022.",
       "Run /experience for the rundown.",
     ]);
   if (/(fun|hobby|else|about you|yourself|who)/.test(t))
     return reply([
       profile.name + " — " + profile.role + ", " + profile.school + ".",
-      "Off-keyboard: bouldering, ramen, beat-em-up animes, late-night walks.",
-      "(yes, the sprite is Sukuna. cursed energy = compute budget.)",
+      "Off-keyboard: physics olympiads, late-night walks, ramen.",
+      "Run /about for the long version.",
     ]);
   return [
     [s("I can talk about my "), s("work", "blue"), s(", "), s("projects", "blue"), s(", "), s("stack", "blue"),

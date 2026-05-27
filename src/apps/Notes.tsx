@@ -10,21 +10,28 @@ const NOTES: Note[] = [
     date: "May 2026",
     body:
       `What I'm focused on this month:\n\n` +
-      `• ${profile.projects[0].name} — ${profile.projects[0].detail}\n` +
-      `• Tightening the eval harness for tool-use agents (got a 14% lift last sprint).\n` +
-      `• Writing more: a piece on latency budgets in LLM pipelines.\n\n` +
+      `• Silicon Data — extending SiliconMark to cover cross-cloud comparisons.\n` +
+      `• inari — broker integrations, hardening the trade-proposal flow.\n` +
+      `• OTCR — tech-division pipeline and recruiting for next semester.\n\n` +
       `Reachable at ${profile.email}.`,
   },
   {
-    id: "reading",
-    title: "Reading list",
+    id: "publications",
+    title: "Publications",
+    date: "2026",
+    body:
+      profile.publications
+        .map((p) => `• ${p.title}\n  ${p.venue}\n  ${p.role}`)
+        .join("\n\n"),
+  },
+  {
+    id: "awards",
+    title: "Awards & competitions",
     date: "ongoing",
     body:
-      `Books & papers in rotation:\n\n` +
-      `• Designing Data-Intensive Applications — Kleppmann\n` +
-      `• The Tail at Scale — Dean & Barroso\n` +
-      `• A Philosophy of Software Design — Ousterhout\n` +
-      `• Anything on retrieval + long-context evaluation.`,
+      profile.awards
+        .map((a) => `${a.year} — ${a.title}${a.note ? "\n  " + a.note : ""}`)
+        .join("\n\n"),
   },
   {
     id: "principles",
@@ -35,7 +42,7 @@ const NOTES: Note[] = [
       `1. Make it correct, then make it fast — but budget latency from day one.\n` +
       `2. Tools should get out of the user's way.\n` +
       `3. Small PRs, fast feedback, ship daily.\n` +
-      `4. Logs and evals over vibes.\n` +
+      `4. Measurements over vibes. Benchmarks over claims.\n` +
       `5. Delete more than you add.`,
   },
   {
@@ -44,10 +51,11 @@ const NOTES: Note[] = [
     date: "updated May 2026",
     body:
       `Daily drivers:\n\n` +
-      `• Editor: Neovim (lazy.nvim)\n` +
+      `• Editor: Cursor + Neovim\n` +
       `• Terminal: Ghostty + tmux + zsh\n` +
       `• Languages: ${profile.stack.lang.join(", ")}\n` +
-      `• Infra: ${profile.stack.infra.join(", ")}\n` +
+      `• Backend: ${profile.stack.backend.join(", ")}\n` +
+      `• Frontend: ${profile.stack.frontend.join(", ")}\n` +
       `• Launcher: Raycast`,
   },
 ];

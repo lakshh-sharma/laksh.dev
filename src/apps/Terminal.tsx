@@ -26,6 +26,8 @@ const SLASH_CMDS: { name: string; hint: string }[] = [
   { name: "/about", hint: "who i am" },
   { name: "/projects", hint: "what i've built" },
   { name: "/experience", hint: "where i've worked" },
+  { name: "/publications", hint: "papers" },
+  { name: "/awards", hint: "competitions" },
   { name: "/stack", hint: "what i build with" },
   { name: "/contact", hint: "reach me" },
   { name: "/resume", hint: "download link" },

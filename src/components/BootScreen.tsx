@@ -7,6 +7,13 @@ export function BootScreen({ onDone }: Props) {
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setProgress(1);
+      setFading(true);
+      const id = setTimeout(onDone, 60);
+      return () => clearTimeout(id);
+    }
     const start = performance.now();
     const total = 2600;
     let raf = 0;

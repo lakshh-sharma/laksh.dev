@@ -3,6 +3,9 @@ import type { AppId } from "../os/types";
 
 import claudeIcon from "../assets/icons/claude.png";
 import slackIcon from "../assets/icons/slack.png";
+import chromeIcon from "../assets/icons/chrome.webp";
+import settingsIcon from "../assets/icons/settings.webp";
+import zoomIcon from "../assets/icons/zoom.svg";
 
 // macOS-style SVG icons. Real PNGs are wired in only where they look good.
 const SVG_ICONS: Record<string, JSX.Element> = {
@@ -115,16 +118,18 @@ interface DockItem {
   decorative?: boolean;
   svg?: JSX.Element;
   img?: string;
-  fit?: "tight" | "normal" | "loose";
+  fit?: "tight" | "normal" | "loose" | "app";
 }
 
 const ITEMS: DockItem[] = [
   { key: "finder", title: "Finder", svg: SVG_ICONS.finder, appId: "finder", props: { folder: "about-me" } },
   { key: "terminal", title: "Terminal — laksh", svg: SVG_ICONS.terminal, appId: "terminal" },
   { key: "claude", title: "Claude", img: claudeIcon, decorative: true, fit: "tight" },
+  { key: "chrome", title: "Chrome", img: chromeIcon, decorative: true, fit: "app" },
   { key: "notes", title: "Notes", svg: SVG_ICONS.notes, appId: "notes" },
   { key: "slack", title: "Slack", img: slackIcon, decorative: true },
-  { key: "settings", title: "System Settings", svg: SVG_ICONS.settings, appId: "settings" },
+  { key: "zoom", title: "Zoom", img: zoomIcon, decorative: true, fit: "app" },
+  { key: "settings", title: "System Settings", img: settingsIcon, appId: "settings", fit: "app" },
 ];
 
 export function Dock() {

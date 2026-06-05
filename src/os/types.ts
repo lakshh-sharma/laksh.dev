@@ -13,7 +13,7 @@ export interface WindowState extends Rect {
   props?: Record<string, unknown>;
 }
 
-export type WallpaperId = "sequoia" | "graphite" | "sunset" | "abyss";
+export type WallpaperId = "photo" | "sequoia" | "graphite" | "sunset" | "abyss";
 export type Theme = "dark" | "light";
 
 export interface Settings {

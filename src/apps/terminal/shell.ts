@@ -10,6 +10,8 @@ export interface RunResult {
   clear?: boolean;
   boot?: boolean;
   bootMode?: boolean;
+  project?: string;     // project id → Terminal renders a ProjectCard
+  experience?: boolean; // → Terminal renders the ExperienceCards
 }
 
 const s = (t: string, c?: SegClass): Seg => ({ t, c });
@@ -231,27 +233,19 @@ export class Shell {
     }),
     projects: () => {
       const out: Line[] = [];
+      const w = Math.max(...profile.projects.map((p) => p.name.length)) + 2;
       for (const p of profile.projects)
-        out.push(line(s("  • "), s(p.name.padEnd(14), "dir"), s("// " + p.blurb, "dim")));
+        out.push(line(s("  • "), s(p.name.padEnd(w), "dir"), s("// " + p.blurb, "dim")));
       out.push([s(" ")]);
-      out.push(line(s("ask me about any of them, or run /projects <name>.", "dim")));
+      out.push(line(s("select one for the full card — type its name", "dim"), s(" (e.g. ", "dim"), s(profile.projects[0].id, "orange"), s(")", "dim")));
       return { lines: out };
     },
-    experience: () => {
-      const out: Line[] = [];
-      profile.experience.forEach((e, i) => {
-        if (i > 0) out.push([s(" ")]);
-        out.push(line(s(e.role, "fg"), s(" · " + e.org, "orange")));
-        out.push(line(s(e.period, "dim")));
-        out.push(line(s(e.blurb)));
-        out.push(line(s(e.detail, "dim")));
-      });
-      return { lines: out };
-    },
+    experience: () => ({ lines: [], experience: true }),
     publications: () => {
       const out: Line[] = [];
       profile.publications.forEach((p) => {
         out.push(line(s("• "), s(p.title, "fg")));
+        out.push(line(s("  " + p.authors, "dim")));
         out.push(line(s("  " + p.venue, "blue")));
         out.push(line(s("  " + p.role, "dim")));
       });
@@ -294,12 +288,12 @@ export class Shell {
       if (trimmed.startsWith("/")) {
         const [raw, ...rest] = trimmed.slice(1).split(/\s+/);
         const fn = this.slashCommands[raw];
-        if (fn) return fn();
-        // Allow /projects <name>
+        // Allow /projects <name> → render the rich card
         if (raw === "projects" && rest.length) {
-          const p = profile.projects.find((x) => x.name === rest[0]);
-          if (p) return { lines: p.readme.split("\n").map((l) => [s(l)] as Line) };
+          const p = findProject(rest.join(" "));
+          if (p) return { lines: [], project: p.id };
         }
+        if (fn) return fn();
         return {
           lines: [
             line(s("unknown command: ", "red"), s("/" + raw)),
@@ -307,6 +301,10 @@ export class Shell {
           ],
         };
       }
+      // bare project name (e.g. "forge") → show its card
+      const proj = findProject(trimmed);
+      if (proj) return { lines: [], project: proj.id };
+
       // OS-command guard so people see *why* it doesn't work
       const guard = /^(ls|cd|pwd|cat|tree|whoami|echo|date|rm|mv|cp|grep|vim|sudo)\b/;
       if (guard.test(trimmed)) {
@@ -327,6 +325,12 @@ export class Shell {
     if (fn) return fn(args);
     return { lines: [line(s("zsh: ", "red"), s("command not found: " + raw + " "), s("— try ", "dim"), s("laksh", "orange"))] };
   }
+}
+
+// Match a project by id or display name, case-insensitively.
+function findProject(q: string) {
+  const t = q.trim().toLowerCase();
+  return profile.projects.find((p) => p.id === t || p.name.toLowerCase() === t);
 }
 
 function common(prefix: string, names: string[]): string | null {
@@ -353,10 +357,17 @@ function answer(q: string): Line[] {
     ]);
   if (/(otcr|consult|club|president|executive|partner)/.test(t))
     return reply([
-      "Co-President at OTCR Consulting — UIUC's largest student consulting org.",
-      "60 members, 11 client engagements per semester, 8% accept rate.",
-      "Grew the club's finances from $3k → $20k. Founded the tech division from",
-      "scratch (internal tooling adoption + technical consulting projects).",
+      "Co-President (Executive Partner) at OTCR Consulting.",
+      "Manage a 50-member consultancy and sourced 11 engagements across strategy,",
+      "operations, and technology for Fortune 500 and growth-stage clients.",
+      "Drove 10x revenue growth by rebuilding staffing, SOW, and quality controls.",
+    ]);
+  if (/(research|ncsa|kindratenko|green context|partition|prefill|decode|roofline|inference)/.test(t))
+    return reply([
+      "At UIUC NCSA I'm building an analytical model for the goodput-optimal",
+      "prefill/decode SM-partition split for single-GPU LLM inference, using",
+      "NVIDIA Green Contexts (CUDA 12.4+). The goal is a closed-form predictor",
+      "from roofline quantities that transfers across GPU generations — no re-fitting.",
     ]);
   if (/(iypt|olympiad|physics|india|tournament)/.test(t))
     return reply([
@@ -368,36 +379,36 @@ function answer(q: string): Line[] {
   if (/(work|building|right now|current|now)/.test(t))
     return reply([
       `Right now: ${profile.role}.`,
-      "Building benchmarks and tooling on the GPU side; on the personal side,",
-      "shipping inari (social investing) and forge (Mac prompt rewriter).",
+      "Building GPU benchmarking + automation infra at Silicon Data, GPU-partition",
+      "research at NCSA, and side projects like crAIwl and forge.",
       "Run /projects for the rundown.",
     ]);
-  if (/(inari|invest|broker|alpaca|tradier|snaptrade)/.test(t))
+  if (/(fpga|verilog|spartan|digit|cnn|hardware|chiptune)/.test(t))
     return reply([
-      "Inari is a social investing platform — friends create group funds and",
-      "coordinate trades without pooling capital. Each member's money stays in",
-      "their own broker. React + FastAPI. Native Alpaca + Tradier, with SnapTrade",
-      "for Robinhood, Fidelity, Webull, Schwab, IBKR, E*Trade, Tastytrade.",
+      "The FPGA CNN Digit Classifier runs handwritten-digit recognition entirely",
+      "in hardware on a Spartan-7, written in SystemVerilog — no CPU in the loop.",
+      "USB mouse interface for drawing input, plus a chiptune audio engine.",
+      "Type `fpga-cnn` for the card.",
     ]);
   if (/(forge|prompt|swift|menu ?bar|hotkey)/.test(t))
     return reply([
-      "Forge is a Mac menu-bar app that rewrites any prompt into a technique-rich",
-      "one on a hotkey — works across any text field via the Accessibility API.",
-      "Swift / SwiftUI. Local rules engine + optional Anthropic API pass.",
-      "github.com/lakshh-sharma/Forge",
+      "Forge is a macOS menu-bar app that rewrites any selected prompt into a",
+      "technique-rich version on a single hotkey. Local rules engine in ~50ms",
+      "with no network call; optional Claude pass swaps in asynchronously.",
+      "Type `forge` for the card · github.com/lakshh-sharma/Forge",
     ]);
-  if (/(crawl|crawler|crAIwl|crawler|scrape|extract)/i.test(t))
+  if (/(crawl|crawler|craiwl|scrape|extract|selector)/i.test(t))
     return reply([
-      "crAIwl is an intelligent crawler — describe what to extract in English and",
-      "it writes and manages the crawler itself. TypeScript, 6-package monorepo.",
-      "Templates are written once and reused across recurring workflows.",
-      "github.com/lakshh-sharma/crAIwl",
+      "crAIwl is an LLM-as-compiler crawler: the model generates CSS/XPath",
+      "extraction programs once per site, then they run deterministically at",
+      "~50ms/page and self-heal when selectors break. TS, Node 20, Postgres,",
+      "Redis, BullMQ, Playwright. Type `craiwl` for the card.",
     ]);
   if (/(project|portfolio|made|built|side)/.test(t))
     return [
       [s("Here's what I'm building:")],
       ...profile.projects.map((p) => line(s("  • "), s(p.name, "dir"), s(" — " + p.blurb, "dim"))),
-      [s("Try "), s("/projects", "orange"), s(" anytime.", "dim")],
+      [s("Type a name (e.g. "), s(profile.projects[0].id, "orange"), s(") for the full card.", "dim")],
     ];
   if (/(stack|tech|language|tool|framework)/.test(t))
     return reply([

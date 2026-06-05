@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Shell, type Line } from "./terminal/shell";
 import { ClaudeBoot } from "./terminal/ClaudeBoot";
+import { ProjectCard } from "./terminal/ProjectCard";
+import { ExperienceBrowser } from "./terminal/ExperienceBrowser";
+import { profile } from "../data/profile";
 
 type Item =
   | { kind: "prompt"; dir: string; cmd: string; mode: "shell" | "laksh" }
   | { kind: "out"; lines: Line[] }
+  | { kind: "project"; id: string }
+  | { kind: "experience" }
   | { kind: "boot" };
 
 interface Tab {
@@ -18,6 +23,8 @@ interface Tab {
   history: string[];
   histIdx: number;
   draft: string;
+  expIndex: number;
+  expOpen: boolean;
 }
 
 const HOST = "lakshsharma@Lakshs-MacBook-Pro";
@@ -50,7 +57,7 @@ function LineView({ line }: { line: Line }) {
 function newTab(id: number): Tab {
   return {
     id, label: "Terminal", shell: new Shell(), items: [], input: "",
-    booted: false, bootRunning: false, history: [], histIdx: -1, draft: "",
+    booted: false, bootRunning: false, history: [], histIdx: -1, draft: "", expIndex: 0, expOpen: false,
   };
 }
 
@@ -142,11 +149,38 @@ export default function Terminal() {
     const res = t.shell.run(cmd);
     if (res.clear) updateActive({ items: [] });
     if (res.boot) { bootSequence(); return; }
+    if (res.project) updateActive((prev) => ({ items: [...prev.items, { kind: "project" as const, id: res.project! }] }));
+    if (res.experience) updateActive((prev) => ({ items: [...prev.items, { kind: "experience" as const }], expIndex: 0, expOpen: false }));
     if (res.lines.length) pushOut(res.lines);
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     const t = active;
+
+    // When the experience picker is the latest output and nothing is typed,
+    // the keyboard drives it instead of the command line.
+    const lastItem = t.items[t.items.length - 1];
+    const expLive = lastItem?.kind === "experience" && t.input.trim() === "";
+    if (expLive) {
+      const n = profile.experience.length;
+      if (!t.expOpen && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        e.preventDefault();
+        const delta = e.key === "ArrowUp" ? -1 : 1;
+        updateActive({ expIndex: (((t.expIndex + delta) % n) + n) % n });
+        return;
+      }
+      if (!t.expOpen && e.key === "Enter") {
+        e.preventDefault();
+        updateActive({ expOpen: true });
+        return;
+      }
+      if (t.expOpen && (e.key === "Escape" || e.key === "ArrowLeft" || e.key === "Backspace")) {
+        e.preventDefault();
+        updateActive({ expOpen: false });
+        return;
+      }
+    }
+
     if (e.key === "Enter") {
       e.preventDefault();
       const v = t.input;
@@ -186,6 +220,8 @@ export default function Terminal() {
     ? 'Ask me anything — or type "/" for commands'
     : 'Type "laksh" to boot my profile · or "help"';
 
+  const lastItem = active.items[active.items.length - 1];
+  const expLive = lastItem?.kind === "experience" && active.input.trim() === "";
   const slashOpen = active.booted && active.input.startsWith("/");
   const slashMatches = slashOpen
     ? SLASH_CMDS.filter((c) => c.name.startsWith(active.input.split(/\s+/)[0]))
@@ -250,6 +286,21 @@ export default function Terminal() {
               </div>
             );
           if (it.kind === "boot") return <ClaudeBoot key={idx} />;
+          if (it.kind === "project") {
+            const p = profile.projects.find((x) => x.id === it.id);
+            return p ? <ProjectCard key={idx} project={p} /> : null;
+          }
+          if (it.kind === "experience")
+            return (
+              <ExperienceBrowser
+                key={idx}
+                index={active.expIndex}
+                open={active.expOpen}
+                onIndex={(n) => updateActive({ expIndex: n })}
+                onOpen={() => updateActive({ expOpen: true })}
+                onClose={() => updateActive({ expOpen: false })}
+              />
+            );
           return <div key={idx}>{it.lines.map((l, i) => <LineView key={i} line={l} />)}</div>;
         })}
       </div>
@@ -286,7 +337,13 @@ export default function Terminal() {
         </div>
         <div className="term-input-footer">
           <span className="hint-left">
-            {active.booted ? <>
+            {expLive ? (active.expOpen ? <>
+              <span className="seg-orange">esc</span> <span>to go back</span>
+            </> : <>
+              <span className="seg-orange">↑ ↓</span> <span>to navigate</span>
+              <span className="sep">·</span>
+              <span className="seg-orange">↵</span> <span>to open</span>
+            </>) : active.booted ? <>
               <span className="dim">?</span> <span>for shortcuts</span>
               <span className="sep">·</span>
               <span className="dim">/</span> <span>for commands</span>

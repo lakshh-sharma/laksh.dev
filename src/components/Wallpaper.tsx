@@ -1,7 +1,9 @@
 import { useOS } from "../os/store";
 import type { Theme, WallpaperId } from "../os/types";
+import wallpaperPhoto from "../assets/wallpaper.jpg";
 
 export const WALLPAPERS: Record<WallpaperId, { name: string }> = {
+  photo: { name: "Photo" },
   sequoia: { name: "Sequoia" },
   graphite: { name: "Graphite" },
   sunset: { name: "Sunset" },
@@ -12,6 +14,8 @@ export const WALLPAPERS: Record<WallpaperId, { name: string }> = {
 export function wallpaperCss(id: WallpaperId, theme: Theme): string {
   const dark = theme === "dark";
   switch (id) {
+    case "photo":
+      return `center / cover no-repeat url(${wallpaperPhoto})`;
     case "sequoia":
       return dark
         ? `radial-gradient(60% 50% at 20% 95%, rgba(196,108,196,0.55), transparent 60%),

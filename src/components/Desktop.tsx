@@ -4,6 +4,7 @@ import { MenuBar } from "./MenuBar";
 import { Dock } from "./Dock";
 import { DesktopIcons } from "./DesktopIcons";
 import { Window } from "./Window";
+import { GlassFilter } from "./GlassFilter";
 
 export function Desktop() {
   const { state } = useOS();
@@ -12,6 +13,7 @@ export function Desktop() {
 
   return (
     <div className="os-root">
+      <GlassFilter />
       <Wallpaper />
       <DesktopIcons />
       {state.windows.map((w) => (

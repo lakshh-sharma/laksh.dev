@@ -26,7 +26,7 @@ const initial: OSState = {
   windows: [],
   nextZ: 1,
   seq: 1,
-  settings: { wallpaper: "sequoia", theme: "dark" },
+  settings: { wallpaper: "photo", theme: "dark" },
 };
 
 function reducer(state: OSState, a: Action): OSState {
